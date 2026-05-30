@@ -8,6 +8,7 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<{name: string, content: string} | null>(null);
 
   const allLangs = [
     { id: "typescript", label: "TypeScript", short: "TS" },
@@ -47,7 +48,13 @@ export default function App() {
 
       setResult(data);
     } catch (err: any) {
-      setError(err.message);
+      if (err.message === "Failed to fetch") {
+        setError("Cannot connect to server. Please check your internet connection and try again.");
+      } else if (err.message.includes("Generation failed")) {
+        setError("SDK generation failed. Make sure your OpenAPI file is valid (JSON or YAML).");
+      } else {
+        setError(err.message || "An unexpected error occurred. Please try again.");
+      }
     } finally {
       setGenerating(false);
     }
@@ -220,16 +227,34 @@ export default function App() {
             <div style={{ color: "#888", marginBottom: "16px" }}>
               {result.title} v{result.version} • {result.endpoints} endpoints
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
               {Object.entries(result.files).map(([filename, content]) => (
-                <button key={filename} onClick={() => downloadFile(filename, content as string)} style={{
-                  padding: "8px 16px", borderRadius: "8px", border: "1px solid #22c55e44",
-                  background: "#111", color: "#22c55e", cursor: "pointer", fontSize: "13px"
-                }}>
-                  ⬇️ {filename}
-                </button>
+                <div key={filename} style={{ display: "flex" }}>
+                  <button onClick={() => setPreviewFile(previewFile?.name === filename ? null : {name: filename, content: content as string})} style={{
+                    padding: "8px 12px", borderRadius: "8px 0 0 8px", border: "1px solid #22c55e44",
+                    background: previewFile?.name === filename ? "#22c55e22" : "#111",
+                    color: "#22c55e", cursor: "pointer", fontSize: "13px"
+                  }}>👁️ {filename}</button>
+                  <button onClick={() => downloadFile(filename, content as string)} style={{
+                    padding: "8px 12px", borderRadius: "0 8px 8px 0", border: "1px solid #22c55e44",
+                    borderLeft: "none", background: "#111", color: "#22c55e", cursor: "pointer", fontSize: "13px"
+                  }}>⬇️</button>
+                </div>
               ))}
             </div>
+            {previewFile && (
+              <div style={{ marginTop: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ color: "#888", fontSize: "13px" }}>📄 {previewFile.name}</span>
+                  <button onClick={() => setPreviewFile(null)} style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: "18px" }}>✕</button>
+                </div>
+                <pre style={{
+                  background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "8px",
+                  padding: "16px", overflowX: "auto", fontSize: "12px", color: "#ccc",
+                  maxHeight: "400px", overflowY: "auto", textAlign: "left", whiteSpace: "pre-wrap"
+                }}>{previewFile.content.slice(0, 3000)}{previewFile.content.length > 3000 ? "\n\n... (truncated, download to see full file)" : ""}</pre>
+              </div>
+            )}
           </div>
         )}
       </div>
