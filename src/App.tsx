@@ -1,4 +1,9 @@
 import { useState, useEffect } from "react";
+import Prism from "prismjs";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-go";
+import "prismjs/themes/prism-tomorrow.css";
 import Landing from "./Landing";
 import { supabase } from "./supabase";
 
@@ -277,10 +282,19 @@ export default function App() {
                   <button onClick={() => setPreviewFile(null)} style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: "18px" }}>✕</button>
                 </div>
                 <pre style={{
-                  background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "8px",
-                  padding: "16px", overflowX: "auto", fontSize: "12px", color: "#ccc",
-                  maxHeight: "400px", overflowY: "auto", textAlign: "left", whiteSpace: "pre-wrap"
-                }}>{previewFile.content.slice(0, 3000)}{previewFile.content.length > 3000 ? "\n\n... (truncated, download to see full file)" : ""}</pre>
+                  background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: "8px",
+                  padding: "16px", overflowX: "auto", fontSize: "12px",
+                  maxHeight: "400px", overflowY: "auto", textAlign: "left", margin: 0
+                }}>
+                  <code
+                    className={previewFile.name.endsWith(".ts") ? "language-typescript" : previewFile.name.endsWith(".py") ? "language-python" : previewFile.name.endsWith(".go") ? "language-go" : "language-typescript"}
+                    dangerouslySetInnerHTML={{ __html: Prism.highlight(
+                      previewFile.content.slice(0, 3000) + (previewFile.content.length > 3000 ? "\n\n// ... truncated" : ""),
+                      previewFile.name.endsWith(".py") ? Prism.languages.python : previewFile.name.endsWith(".go") ? Prism.languages.go : Prism.languages.typescript,
+                      previewFile.name.endsWith(".py") ? "python" : previewFile.name.endsWith(".go") ? "go" : "typescript"
+                    )}}
+                  />
+                </pre>
               </div>
             )}
           </div>
