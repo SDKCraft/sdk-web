@@ -26,6 +26,8 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<SDKResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [generatingDocs, setGeneratingDocs] = useState(false);
+  const [docsResult, setDocsResult] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<{name: string, content: string} | null>(null);
 
   const allLangs = [
@@ -91,6 +93,27 @@ export default function App() {
       }
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleGenerateDocs = async () => {
+    if (!file) return alert("Please upload an OpenAPI file first!");
+    setGeneratingDocs(true);
+    setDocsResult(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("http://localhost:4000/generate-docs", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      setDocsResult(data.docs);
+    } catch (err: any) {
+      setError(err.message || "Failed to generate docs");
+    } finally {
+      setGeneratingDocs(false);
     }
   };
 
@@ -259,8 +282,45 @@ export default function App() {
           fontWeight: 700, fontSize: "16px", cursor: generating ? "not-allowed" : "pointer",
           transition: "all 0.2s"
         }}>
-          {generating ? "⚡ Generating..." : result ? "⚡ Generate Again" : "⚡ Generate SDK"}
+          </button>
+          <button onClick={handleGenerateDocs} disabled={generatingDocs} style={{
+            flex: 1, padding: "16px", borderRadius: "12px", border: "1px solid #3b82f6",
+            background: generatingDocs ? "#1a1a1a" : "#0f172a", color: generatingDocs ? "#666" : "#3b82f6",
+            fontWeight: 700, fontSize: "16px", cursor: generatingDocs ? "not-allowed" : "pointer",
+          }}>
+            {generatingDocs ? "📄 Generating..." : "📄 Generate AI Docs"}
         </button>
+
+        {/* AI Docs Result */}
+        {docsResult && (
+          <div style={{
+            marginTop: "16px", background: "#0f0f1f", border: "1px solid #3b82f633",
+            borderRadius: "12px", padding: "20px"
+          }}>
+            <div style={{ color: "#3b82f6", fontWeight: 700, fontSize: "18px", marginBottom: "16px" }}>
+              📄 AI Generated Documentation
+            </div>
+            <pre style={{
+              background: "#1a1a1a", borderRadius: "8px", padding: "16px",
+              overflowX: "auto", fontSize: "12px", maxHeight: "500px",
+              overflowY: "auto", color: "#ccc", whiteSpace: "pre-wrap"
+            }}>
+              {docsResult}
+            </pre>
+            <button onClick={() => {
+              const blob = new Blob([docsResult], { type: "text/markdown" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url; a.download = "README.md"; a.click();
+            }} style={{
+              marginTop: "12px", padding: "10px 20px", borderRadius: "8px",
+              border: "1px solid #3b82f6", background: "transparent",
+              color: "#3b82f6", cursor: "pointer", fontWeight: 600
+            }}>
+              ⬇️ Download README.md
+            </button>
+          </div>
+        )}
 
         {/* Error */}
         {error && (
