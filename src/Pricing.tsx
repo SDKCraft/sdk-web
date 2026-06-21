@@ -3,6 +3,7 @@ import { useState } from "react";
 export default function Pricing({ onStart }: { onStart: () => void }) {
   const [email, setEmail] = useState("");
   const [joined, setJoined] = useState(false);
+  const [annual, setAnnual] = useState(false);
 
   const handleWaitlist = () => {
     if (!email) return alert("Please enter your email!");
@@ -13,7 +14,9 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
     {
       name: "Free",
       price: "$0",
+      annualPrice: "$0",
       period: "forever",
+      annualNote: "",
       color: "#888",
       border: "#1a1a1a",
       badge: null,
@@ -37,7 +40,9 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
     {
       name: "Pro",
       price: "$15",
+      annualPrice: "$165",
       period: "per month",
+      annualNote: "Save $15 vs monthly",
       color: "#22c55e",
       border: "#22c55e44",
       badge: "RECOMMENDED",
@@ -60,7 +65,9 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
     {
       name: "Team",
       price: "$25",
+      annualPrice: "$275",
       period: "per month",
+      annualNote: "Save $25 vs monthly",
       color: "#7c3aed",
       border: "#7c3aed44",
       badge: null,
@@ -92,26 +99,43 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
       </nav>
 
       {/* Header */}
-      <section style={{ maxWidth: "760px", margin: "0 auto", padding: "80px 24px 60px", textAlign: "center" }}>
+      <section style={{ maxWidth: "760px", margin: "0 auto", padding: "80px 24px 40px", textAlign: "center" }}>
         <h1 style={{ fontSize: "48px", fontWeight: 800, margin: "0 0 16px", letterSpacing: "-1.5px" }}>Simple, transparent pricing</h1>
-        <p style={{ color: "#888", fontSize: "18px", margin: 0 }}>Start free. Upgrade when you're ready.</p>
+        <p style={{ color: "#888", fontSize: "18px", margin: "0 0 32px" }}>Start free. Upgrade when you're ready.</p>
+
+        {/* Toggle */}
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "12px", background: "#111", border: "1px solid #222", borderRadius: "999px", padding: "6px 16px" }}>
+          <span style={{ fontSize: "14px", color: annual ? "#555" : "#fff", fontWeight: 600 }}>Monthly</span>
+          <div onClick={() => setAnnual(!annual)} style={{ width: "44px", height: "24px", borderRadius: "999px", background: annual ? "#22c55e" : "#333", cursor: "pointer", position: "relative", transition: "all 0.2s" }}>
+            <div style={{ position: "absolute", top: "3px", left: annual ? "22px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "all 0.2s" }} />
+          </div>
+          <span style={{ fontSize: "14px", color: annual ? "#fff" : "#555", fontWeight: 600 }}>Annual <span style={{ color: "#22c55e" }}>🏷️ Save more</span></span>
+        </div>
       </section>
 
       {/* Plans */}
-      <section style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px 60px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
+      <section style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px 24px 60px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
         {plans.map(plan => (
           <div key={plan.name} style={{ background: "#0a0a0a", border: `1px solid ${plan.border}`, borderRadius: "16px", padding: "32px", position: "relative" }}>
             {plan.badge && (
               <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", background: plan.color, color: "#000", fontSize: "12px", fontWeight: 700, padding: "4px 14px", borderRadius: "999px" }}>{plan.badge}</div>
             )}
             <div style={{ fontSize: "14px", color: plan.color, marginBottom: "12px", fontWeight: 600 }}>{plan.name.toUpperCase()}</div>
-            <div style={{ fontSize: "48px", fontWeight: 800, marginBottom: "4px" }}>{plan.price}</div>
-            <div style={{ color: "#555", fontSize: "14px", marginBottom: "32px" }}>{plan.period}</div>
+            <div style={{ fontSize: "48px", fontWeight: 800, marginBottom: "4px" }}>
+              {annual && plan.annualPrice !== "$0" ? plan.annualPrice : plan.price}
+            </div>
+            <div style={{ color: "#555", fontSize: "14px", marginBottom: "4px" }}>
+              {annual && plan.annualPrice !== "$0" ? "per year" : plan.period}
+            </div>
+            {annual && plan.annualNote && (
+              <div style={{ color: "#22c55e", fontSize: "12px", marginBottom: "24px" }}>✅ {plan.annualNote}</div>
+            )}
+            {(!annual || plan.annualPrice === "$0") && <div style={{ marginBottom: "24px" }} />}
             <button
               onClick={plan.ctaAction || (() => {})}
               style={{ width: "100%", padding: "12px", borderRadius: "10px", fontSize: "15px", fontWeight: 700, cursor: plan.ctaAction ? "pointer" : "not-allowed", marginBottom: "32px", opacity: plan.ctaAction ? 1 : 0.7, ...plan.ctaStyle }}
             >
-              {plan.cta} {!plan.ctaAction && "— Coming soon"}
+              {plan.cta}{!plan.ctaAction ? " — Coming soon" : ""}
             </button>
             {plan.features.map(f => (
               <div key={f.text} style={{ display: "flex", gap: "10px", marginBottom: "12px", fontSize: "14px", color: f.included ? "#aaa" : "#444" }}>
@@ -149,7 +173,7 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
       {/* Waitlist */}
       <section style={{ maxWidth: "600px", margin: "0 auto", padding: "0 24px 100px", textAlign: "center" }}>
         <div style={{ background: "#0a0a0a", border: "1px solid #22c55e33", borderRadius: "16px", padding: "40px" }}>
-          <div style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}> Join the Pro Waitlist</div>
+          <div style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>Join the Pro Waitlist</div>
           <div style={{ color: "#888", marginBottom: "24px" }}>Be first when Pro launches. Early adopters get <strong style={{ color: "#22c55e" }}>30% off</strong>.</div>
           {joined ? (
             <div style={{ color: "#22c55e", fontWeight: 700, fontSize: "18px" }}>✅ You're on the list! We'll notify you soon.</div>
