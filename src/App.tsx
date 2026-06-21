@@ -11,7 +11,7 @@ import "prismjs/themes/prism-tomorrow.css";
 import Landing from "./Landing";
 import Pricing from "./Pricing";
 import { supabase } from "./supabase";
-import { deleteSDKHistory, getSDKHistory, saveSDKHistory } from "./lib/sdkHistory";
+import { saveSDKHistory, getSDKHistory, deleteSDKHistory, checkAndRegisterProject } from "./lib/sdkHistory";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://api-to-sdk-production.up.railway.app";
@@ -212,7 +212,15 @@ export default function App() {
     setGenerating(true);
     setResult(null);
     setError(null);
-
+// تحقق من الحد المجاني
+if (file) {
+  const check = await checkAndRegisterProject(file);
+  if (!check.allowed) {
+    setError(check.reason || "Upgrade to Pro to generate more SDKs.");
+    setGenerating(false);
+    return;
+  }
+}
     try {
       const formData = new FormData();
       formData.append("file", file);

@@ -64,3 +64,59 @@ export async function deleteSDKHistory(id: string) {
     throw error;
   }
 }
+// حساب hash للملف
+async function hashFile(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// التحقق من عدد الـ APIs وإضافة جديد
+export async function checkAndRegisterProject(file: File): Promise<{
+  allowed: boolean;
+  reason?: string;
+  isNew: boolean;
+}> {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // غير مسجل → مسموح (بدون تتبع)
+  if (!user) return { allowed: true, isNew: false };
+
+  const hash = await hashFile(file);
+
+  // تحقق إذا الـ API موجود مسبقاً
+  const { data: existing } = await supabase
+    .from('user_projects')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('api_hash', hash)
+    .single();
+
+  if (existing) return { allowed: true, isNew: false };
+
+  // عدد الـ APIs الحالية
+  const { count } = await supabase
+    .from('user_projects')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+
+  const FREE_LIMIT = 3;
+
+  if ((count ?? 0) >= FREE_LIMIT) {
+    return { 
+      allowed: false, 
+      reason: `You've reached the free limit of ${FREE_LIMIT} APIs. Upgrade to Pro for unlimited APIs.`,
+      isNew: true
+    };
+  }
+
+  // أضف الـ API الجديد
+  await supabase.from('user_projects').insert({
+    user_id: user.id,
+    api_hash: hash,
+    title: file.name,
+  });
+
+  return { allowed: true, isNew: true };
+}
