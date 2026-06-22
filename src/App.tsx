@@ -7,6 +7,8 @@ import "prismjs/components/prism-go";
 import "prismjs/components/prism-java";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-csharp";
+import "prismjs/components/prism-swift";
 import "prismjs/themes/prism-tomorrow.css";
 import Landing from "./Landing";
 import Pricing from "./Pricing";
@@ -57,6 +59,8 @@ function getLanguage(filename: string) {
   if (filename.endsWith(".go")) return "go";
   if (filename.endsWith(".java")) return "java";
   if (filename.endsWith(".dart")) return "dart";
+  if (filename.endsWith(".cs")) return "csharp";
+  if (filename.endsWith(".swift")) return "swift";
   return "typescript";
 }
 
