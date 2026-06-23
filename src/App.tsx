@@ -225,13 +225,14 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
     setResult(null);
     setError(null);
 // تحقق من الحد المجاني
+// تحقق من الحد المجاني
 if (file) {
   const check = await checkAndRegisterProject(file);
-if (!check.allowed) {
-  setGenerating(false);
-  setShowPricingModal(true);
-  return;
-}
+  if (!check.allowed) {
+    setGenerating(false);
+    setShowPricingModal(true);
+    return;
+  }
 }
     try {
       const formData = new FormData();
@@ -300,8 +301,10 @@ if (!check.allowed) {
   };
 
   const handleBatchGenerate = async () => {
+    if (!isPro && freeBatch >= 1) { setShowPricingModal(true); return; } 
+    if (!isPro && batchFiles.length > 3) { setError("Free plan: max 3 files."); return; }
+    if (!isPro) setFreeBatch(prev => prev + 1);
     if (batchFiles.length === 0) {
-      if (!isPro) { setShowPricingModal(true); return; }
       setError("Upload at least one OpenAPI file for batch generation.");
       return;
     }
