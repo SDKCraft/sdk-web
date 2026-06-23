@@ -210,7 +210,6 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
   };
 
   const handleGenerate = async () => {
-    if (!isPro && freeGenerations >= 3) { setShowPricingModal(true); return; }
     if (!isPro) setFreeGenerations(prev => prev + 1);
     if (!file) {
       setError("Upload an OpenAPI file first.");
