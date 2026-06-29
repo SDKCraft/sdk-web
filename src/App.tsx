@@ -116,8 +116,15 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.provider_token && session?.user) {
+        await supabase.from("user_tokens").upsert({
+          user_id: session.user.id,
+          github_token: session.provider_token,
+          updated_at: new Date().toISOString(),
+        });
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -386,7 +393,16 @@ if (file) {
 
     const { data: { session } } = await supabase.auth.getSession();
 
-    if (!session?.provider_token) {
+    let githubToken = session?.provider_token;
+    if (!githubToken && session?.user) {
+      const { data: tokenData } = await supabase
+        .from("user_tokens")
+        .select("github_token")
+        .eq("user_id", session.user.id)
+        .single();
+      githubToken = tokenData?.github_token ?? null;
+    }
+    if (!githubToken) {
       await supabase.auth.signInWithOAuth({
         provider: "github",
         options: {
@@ -404,7 +420,7 @@ if (file) {
       const createRes = await fetch("https://api.github.com/user/repos", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${session.provider_token}`,
+          Authorization: `Bearer ${githubToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -424,7 +440,7 @@ if (file) {
         const fileRes = await fetch(`https://api.github.com/repos/${repo.full_name}/contents/${safeName}`, {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${session.provider_token}`,
+            Authorization: `Bearer ${githubToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
