@@ -52,9 +52,7 @@ export default function Landing({ onStart, user, onLogin, onLogout, onPricing }:
               <button onClick={onStart} style={{ background: "#22c55e", color: "#000", border: "none", padding: "8px 18px", borderRadius: "8px", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>Dashboard</button>
               <button onClick={onLogout} style={{ background: "none", color: "#aaa", border: "1px solid #333", padding: "8px 14px", borderRadius: "8px", fontSize: "13px", cursor: "pointer" }}>Logout</button>
             </div>
-          ) : (
-            <button onClick={onLogin} style={{ background: "#fff", color: "#000", border: "none", padding: "8px 18px", borderRadius: "8px", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>Sign in with GitHub</button>
-          )}
+          ) : null /* "Sign in with GitHub" button temporarily hidden until account system (Pro tier + history) is fully built. */}
         </div>
       </nav>
 
