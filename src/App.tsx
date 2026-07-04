@@ -92,6 +92,7 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<SDKResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [exportedRepoUrl, setExportedRepoUrl] = useState<string | null>(null);
   const [generatingDocs, setGeneratingDocs] = useState(false);
   const [docsResult, setDocsResult] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<{ name: string; content: string } | null>(null);
@@ -401,6 +402,7 @@ if (file) {
 
   const exportToGitHub = async () => {
     if (!result) { setError("Generate an SDK first."); return; }
+    setExportedRepoUrl(null);
     const clientId = "Ov23likCdgCy06sl4WWk";
     const scope = "repo";
     const redirectUri = `${window.location.origin}/github-callback.html`;
@@ -440,7 +442,7 @@ if (file) {
           body: JSON.stringify({ message: `Add ${safeName}`, content: encoded }),
         });
       }
-      window.open(repo.html_url, "_blank", "noopener,noreferrer");
+      setExportedRepoUrl(repo.html_url);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "GitHub export failed.");
     }
@@ -613,6 +615,14 @@ if (file) {
                 Export to GitHub
               </button>
             </div>
+            {exportedRepoUrl && (
+              <div style={{ marginTop: "12px", padding: "14px", borderRadius: "8px", background: "#0f2416", border: "1px solid #22c55e44", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                <span style={{ color: "#22c55e", fontSize: "14px" }}>✅ Repository created successfully!</span>
+                <a href={exportedRepoUrl} target="_blank" rel="noopener noreferrer" style={{ background: "#22c55e", color: "#000", padding: "8px 16px", borderRadius: "6px", fontWeight: 700, fontSize: "13px", textDecoration: "none" }}>
+                  Open Repository →
+                </a>
+              </div>
+            )}
 
             {previewFile && (
               <div style={{ marginTop: "16px" }}>
