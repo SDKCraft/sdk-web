@@ -404,7 +404,7 @@ if (file) {
     if (!result) { setError("Generate an SDK first."); return; }
     setExportedRepoUrl(null);
     const clientId = "Ov23likCdgCy06sl4WWk";
-    const scope = "repo";
+    const scope = "repo workflow";
     const redirectUri = `${window.location.origin}/github-callback.html`;
     const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     const popup = window.open(authUrl, "github-oauth", "width=600,height=700");
