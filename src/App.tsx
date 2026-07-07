@@ -434,7 +434,7 @@ if (file) {
       });
       const repo = await readJsonResponse(createRes);
       for (const [filename, fileContent] of Object.entries(result.files)) {
-        const safeName = filename.replace(/\//g, "_");
+        const safeName = filename.startsWith(".github/") ? filename : filename.replace(/\//g, "_");
         const encoded = btoa(unescape(encodeURIComponent(fileContent as string)));
         await fetch(`https://api.github.com/repos/${repo.full_name}/contents/${safeName}`, {
           method: "PUT",
