@@ -16,7 +16,7 @@ import { supabase } from "./supabase";
 import { saveSDKHistory, getSDKHistory, deleteSDKHistory, checkAndRegisterProject } from "./lib/sdkHistory";
 
 const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "https://api-to-sdk-production.up.railway.app";
+  process.env.REACT_APP_API_BASE_URL || "https://api-to-sdk.onrender.com";
 
 interface ScoreBreakdown {
   category: string;
