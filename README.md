@@ -25,7 +25,7 @@ Create `.env`:
 ```bash
 REACT_APP_SUPABASE_URL=your_supabase_project_url
 REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
-REACT_APP_API_BASE_URL=https://api-to-sdk-production.up.railway.app
+REACT_APP_API_BASE_URL=https://api-to-sdk.onrender.com
 ```
 
 Start the app:
