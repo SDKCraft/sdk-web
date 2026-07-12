@@ -75,3 +75,9 @@ The AI-powered features (starter documentation generation) currently use a free-
 - Clearly display the free-tier usage limit (and whether it resets monthly) to visitors in the UI before they hit it.
 - Plan a paid-model fallback (e.g. Claude Haiku, GPT-4o-mini, or Gemini Flash) for AI-powered features once the free-tier rate limit is reached, to avoid service interruption as usage grows.
 - Run `npm run build` before publishing launch screenshots.
+
+---
+
+## 📄 License
+
+MIT © SDKCraft
