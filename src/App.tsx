@@ -18,6 +18,11 @@ import { saveSDKHistory, getSDKHistory, deleteSDKHistory, checkAndRegisterProjec
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://api-to-sdk.onrender.com";
 
+// عدد التوليدات المجانية المسموح بها قبل ما نطلب الترقية لـ Pro.
+// ملحوظة: نظام الدفع الفعلي (Stripe) لسه مش متصل، فـ isPro هيفضل false دايمًا
+// لحد ما يتم ربطه — ده حد مؤقت لحماية الميزة الأساسية من الاستخدام الغير محدود.
+const FREE_GENERATIONS_LIMIT = 3;
+
 interface ScoreBreakdown {
   category: string;
   score: number;
@@ -99,6 +104,9 @@ export default function App() {
   const [batchFiles, setBatchFiles] = useState<File[]>([]);
   const [batchResults, setBatchResults] = useState<any[]>([]);
   const [generatingBatch, setGeneratingBatch] = useState(false);
+  // ملحوظة: setIsPro لسه مش بينادى في أي مكان — نظام الدفع (Stripe) لسه مش متصل.
+  // لما يتربط، يفترض نقرأ حالة الاشتراك من الباك إند/Supabase هنا ونستخدم setIsPro.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isPro, setIsPro] = useState<boolean>(false);
 const [showPricingModal, setShowPricingModal] = useState<boolean>(false);
 const [freeGenerations, setFreeGenerations] = useState<number>(0);
@@ -247,6 +255,7 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
   };
 
   const handleGenerate = async () => {
+    if (!isPro && freeGenerations >= FREE_GENERATIONS_LIMIT) { setShowPricingModal(true); return; }
     if (!isPro) setFreeGenerations(prev => prev + 1);
     if (!file) {
       setError("Upload an OpenAPI file first.");
@@ -471,7 +480,7 @@ if (file) {
 >SDKCraft</span>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <a
-            href="https://github.com/ihsanelashhab-web/api-to-sdk/issues/new"
+            href="https://github.com/SDKCraft/api-to-sdk/issues/new"
             target="_blank"
             rel="noreferrer"
             style={{ background: "#1a1a1a", color: "#aaa", padding: "6px 14px", borderRadius: "8px", fontSize: "13px", textDecoration: "none", border: "1px solid #333" }}
