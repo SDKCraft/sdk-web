@@ -39,9 +39,9 @@ export default function Landing({ onStart, user, onLogin, onLogout, onPricing }:
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-          <a href="https://github.com/ihsanelashhab-web/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>GitHub</a>
+          <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>GitHub</a>
           <button onClick={onPricing} style={{ background: "none", border: "none", color: "#888", fontSize: "14px", cursor: "pointer" }}>Pricing</button>
-          <a href="https://github.com/ihsanelashhab-web/api-to-sdk/issues/new" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>Report a bug</a>
+          <a href="https://github.com/SDKCraft/api-to-sdk/issues/new" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>Report a bug</a>
 
           {user ? (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
@@ -72,7 +72,7 @@ export default function Landing({ onStart, user, onLogin, onLogout, onPricing }:
               <button onClick={onStart} style={{ background: "#22c55e", color: "#000", border: "none", padding: "14px 28px", borderRadius: "8px", fontSize: "16px", fontWeight: 800, cursor: "pointer" }}>
                 Generate an SDK
               </button>
-              <a href="https://github.com/ihsanelashhab-web/api-to-sdk" target="_blank" rel="noreferrer" style={{ background: "#111", color: "#fff", border: "1px solid #222", padding: "14px 28px", borderRadius: "8px", fontSize: "16px", fontWeight: 700, textDecoration: "none" }}>
+              <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ background: "#111", color: "#fff", border: "1px solid #222", padding: "14px 28px", borderRadius: "8px", fontSize: "16px", fontWeight: 700, textDecoration: "none" }}>
                 View on GitHub
               </a>
             </div>
@@ -146,7 +146,7 @@ console.log(users.data);`}
 
       <footer style={{ borderTop: "1px solid #111", padding: "24px 32px", display: "flex", justifyContent: "space-between", gap: "16px", color: "#555", fontSize: "13px", flexWrap: "wrap" }}>
         <span>&lt;/&gt; SDKCraft - Open source SDK generator</span>
-        <a href="https://github.com/ihsanelashhab-web/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
+        <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
       </footer>
     </div>
   );

@@ -192,7 +192,7 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
       {/* Footer */}
       <footer style={{ borderTop: "1px solid #111", padding: "24px 40px", display: "flex", justifyContent: "space-between", color: "#555", fontSize: "13px" }}>
         <span>SDKCraft © 2025</span>
-        <a href="https://github.com/ihsanelashhab-web/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
+        <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
       </footer>
     </div>
   );
