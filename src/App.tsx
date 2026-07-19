@@ -202,6 +202,11 @@ export default function App() {
         });
       }
       if (session?.user) await fetchUsage(session.user.id);
+    }).catch((err) => {
+      // لو فشل جلب الجلسة نفسه (شبكة/توكن منتهي/إلخ)، منسيبش الموقع مقفول للأبد
+      console.error("getSession failed:", err);
+      setUser(null);
+      setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
