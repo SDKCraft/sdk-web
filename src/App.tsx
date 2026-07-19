@@ -128,36 +128,51 @@ export default function App() {
   // مختلف عن اليوم الحالي (يعني حد يومي فعلي، مش مدى الحياة).
   const fetchUsage = async (userId: string) => {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const { data } = await supabase
-      .from("user_tokens")
-      .select("is_pro, free_generations, free_docs, free_batch, free_diff, usage_date")
-      .eq("user_id", userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("user_tokens")
+        .select("is_pro, free_generations, free_docs, free_batch, free_diff, usage_date")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (!data || data.usage_date !== today) {
-      // يوم جديد (أو أول مرة) → صفّر العدادات في Supabase وفي الواجهة
-      await supabase.from("user_tokens").upsert({
-        user_id: userId,
-        free_generations: 0,
-        free_docs: 0,
-        free_batch: 0,
-        free_diff: 0,
-        usage_date: today,
-        updated_at: new Date().toISOString(),
-      });
-      setIsPro(data?.is_pro ?? false);
+      if (error) throw error;
+
+      if (!data || data.usage_date !== today) {
+        // يوم جديد (أو أول مرة) → صفّر العدادات في Supabase وفي الواجهة
+        const { error: upsertError } = await supabase.from("user_tokens").upsert({
+          user_id: userId,
+          free_generations: 0,
+          free_docs: 0,
+          free_batch: 0,
+          free_diff: 0,
+          usage_date: today,
+          updated_at: new Date().toISOString(),
+        });
+        if (upsertError) throw upsertError;
+        setIsPro(data?.is_pro ?? false);
+        setFreeGenerations(0);
+        setFreeDocs(0);
+        setFreeBatch(0);
+        setFreeDiff(0);
+      } else {
+        setIsPro(data.is_pro ?? false);
+        setFreeGenerations(data.free_generations ?? 0);
+        setFreeDocs(data.free_docs ?? 0);
+        setFreeBatch(data.free_batch ?? 0);
+        setFreeDiff(data.free_diff ?? 0);
+      }
+    } catch (err) {
+      // لو فشل جلب/تحديث الاستخدام لأي سبب (RLS، شبكة، إلخ)، منسيبش الزرار مقفول
+      // للأبد — نفضّل نفشل بأمان (فتح الاستخدام بحدوده الافتراضية) بدل ما نعطّل المنتج بالكامل.
+      console.error("fetchUsage failed, falling back to safe defaults:", err);
+      setIsPro(false);
       setFreeGenerations(0);
       setFreeDocs(0);
       setFreeBatch(0);
       setFreeDiff(0);
-    } else {
-      setIsPro(data.is_pro ?? false);
-      setFreeGenerations(data.free_generations ?? 0);
-      setFreeDocs(data.free_docs ?? 0);
-      setFreeBatch(data.free_batch ?? 0);
-      setFreeDiff(data.free_diff ?? 0);
+    } finally {
+      setUsageLoaded(true);
     }
-    setUsageLoaded(true);
   };
 
   // بتزود عداد معين بواحد محليًا وفي Supabase مع بعض (بدل ما نعتمد على state محلي بس).
@@ -324,17 +339,17 @@ export default function App() {
     setGenerating(true);
     setResult(null);
     setError(null);
-// تحقق من الحد المجاني
-// تحقق من الحد المجاني
-if (file) {
-  const check = await checkAndRegisterProject(file);
-  if (!check.allowed) {
-    setGenerating(false);
-    setShowPricingModal(true);
-    return;
-  }
-}
+
     try {
+      // تحقق من حد المشاريع المختلفة (3 مشاريع كحد أقصى للمستخدم المجاني)
+      if (file) {
+        const check = await checkAndRegisterProject(file);
+        if (!check.allowed) {
+          setShowPricingModal(true);
+          return;
+        }
+      }
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("langs", JSON.stringify(langs));
