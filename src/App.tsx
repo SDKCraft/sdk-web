@@ -95,6 +95,7 @@ export default function App() {
   const [showLanding, setShowLanding] = useState(true);
   const [showPricing, setShowPricing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [file, setFile] = useState<File | null>(null);
   const [langs, setLangs] = useState<string[]>(["typescript"]);
   const [generating, setGenerating] = useState(false);
@@ -177,6 +178,7 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setAuthLoading(false);
       if (session?.provider_token && session?.user) {
         await supabase.from("user_tokens").upsert({
           user_id: session.user.id,
@@ -305,6 +307,7 @@ export default function App() {
   };
 
   const handleGenerate = async () => {
+    if (authLoading) return;
     if (!user) { await handleLogin(); return; }
     if (!isPro && freeGenerations >= FREE_GENERATIONS_LIMIT) { setShowPricingModal(true); return; }
     if (!isPro) await incrementUsage("free_generations", freeGenerations, setFreeGenerations);
@@ -368,6 +371,7 @@ if (file) {
   };
 
   const handleGenerateDocs = async () => {
+     if (authLoading) return;
      if (!user) { await handleLogin(); return; }
      if (!isPro && freeDocs >= FREE_DOCS_LIMIT) { setShowPricingModal(true); return; }
      if (!isPro) await incrementUsage("free_docs", freeDocs, setFreeDocs);
@@ -399,6 +403,7 @@ if (file) {
   };
 
   const handleBatchGenerate = async () => {
+    if (authLoading) return;
     if (!user) { await handleLogin(); return; }
     if (!isPro && freeBatch >= FREE_BATCH_LIMIT) { setShowPricingModal(true); return; }
     if (!isPro && batchFiles.length > 3) { setError("Free plan: max 3 files."); return; }
@@ -432,6 +437,7 @@ if (file) {
   };
 
   const handleDetectChanges = async () => {
+    if (authLoading) return;
     if (!user) { await handleLogin(); return; }
     if (!oldFile || !newFile) {
       setError("Upload both the old and new OpenAPI files.");
@@ -597,10 +603,10 @@ if (file) {
         </section>
 
         <section style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <button onClick={handleGenerate} disabled={generating || (!!user && !usageLoaded)} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "none", background: generating ? "#1a1a1a" : "#22c55e", color: generating ? "#666" : "#000", fontWeight: 800, fontSize: "16px", cursor: generating ? "not-allowed" : "pointer" }}>
+          <button onClick={handleGenerate} disabled={generating || authLoading || (!!user && !usageLoaded)} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "none", background: generating ? "#1a1a1a" : "#22c55e", color: generating ? "#666" : "#000", fontWeight: 800, fontSize: "16px", cursor: generating ? "not-allowed" : "pointer" }}>
             {generating ? "Generating..." : "Generate SDK"}
           </button>
-          <button onClick={handleGenerateDocs} disabled={generatingDocs || (!!user && !usageLoaded)} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "1px solid #3b82f6", background: generatingDocs ? "#1a1a1a" : "#0f172a", color: generatingDocs ? "#666" : "#93c5fd", fontWeight: 800, fontSize: "16px", cursor: generatingDocs ? "not-allowed" : "pointer" }}>
+          <button onClick={handleGenerateDocs} disabled={generatingDocs || authLoading || (!!user && !usageLoaded)} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "1px solid #3b82f6", background: generatingDocs ? "#1a1a1a" : "#0f172a", color: generatingDocs ? "#666" : "#93c5fd", fontWeight: 800, fontSize: "16px", cursor: generatingDocs ? "not-allowed" : "pointer" }}>
             {generatingDocs ? "Generating docs..." : "Generate AI docs"}
           </button>
         </section>
@@ -751,7 +757,7 @@ if (file) {
             <input type="file" accept=".json,.yaml,.yml" multiple style={{ display: "none" }} onChange={(event) => setBatchFiles(Array.from(event.target.files || []))} />
             <span>{batchFiles.length > 0 ? `${batchFiles.length} files selected` : "Select multiple OpenAPI files"}</span>
           </label>
-          <button onClick={handleBatchGenerate} disabled={generatingBatch || (!!user && !usageLoaded)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: generatingBatch ? "#1a1a1a" : "#7c3aed", color: generatingBatch ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: generatingBatch ? "not-allowed" : "pointer" }}>
+          <button onClick={handleBatchGenerate} disabled={generatingBatch || authLoading || (!!user && !usageLoaded)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: generatingBatch ? "#1a1a1a" : "#7c3aed", color: generatingBatch ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: generatingBatch ? "not-allowed" : "pointer" }}>
             {generatingBatch ? "Processing..." : "Generate all SDKs"}
           </button>
 
@@ -794,7 +800,7 @@ if (file) {
               <div>{newFile ? newFile.name : "New API version"}</div>
             </label>
           </div>
-          <button onClick={handleDetectChanges} disabled={detectingChanges || (!!user && !usageLoaded)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: detectingChanges ? "#1a1a1a" : "#0369a1", color: detectingChanges ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: detectingChanges ? "not-allowed" : "pointer" }}>
+          <button onClick={handleDetectChanges} disabled={detectingChanges || authLoading || (!!user && !usageLoaded)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: detectingChanges ? "#1a1a1a" : "#0369a1", color: detectingChanges ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: detectingChanges ? "not-allowed" : "pointer" }}>
             {detectingChanges ? "Detecting..." : "Detect changes"}
           </button>
 
