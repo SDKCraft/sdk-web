@@ -175,18 +175,12 @@ export default function App() {
   };
 
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    const pendingToken = hashParams.get('provider_token');
-    if (pendingToken) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
-      const token = session?.provider_token || pendingToken;
-      if (token && session?.user) {
+      if (session?.provider_token && session?.user) {
         await supabase.from("user_tokens").upsert({
           user_id: session.user.id,
-          github_token: token,
+          github_token: session.provider_token,
           updated_at: new Date().toISOString(),
         });
       }
