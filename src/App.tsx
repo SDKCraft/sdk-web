@@ -578,6 +578,9 @@ export default function App() {
           <p style={{ color: "#888", margin: 0 }}>
             Transform OpenAPI specifications into production-ready SDKs, docs, and change reports.
           </p>
+          <p style={{ color: "#f0f", margin: "8px 0 0", fontSize: "12px", fontFamily: "monospace" }}>
+            DEBUG: authLoading={String(authLoading)} | usageLoaded={String(usageLoaded)} | user={user ? user.id : "null"} | isPro={String(isPro)} | freeGen={freeGenerations}
+          </p>
         </section>
 
         <section style={{ marginBottom: "24px" }}>
