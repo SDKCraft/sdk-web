@@ -18,10 +18,13 @@ import { saveSDKHistory, getSDKHistory, deleteSDKHistory, checkAndRegisterProjec
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://api-to-sdk.onrender.com";
 
-// عدد التوليدات المجانية المسموح بها قبل ما نطلب الترقية لـ Pro.
-// ملحوظة: نظام الدفع الفعلي (Stripe) لسه مش متصل، فـ isPro هيفضل false دايمًا
-// لحد ما يتم ربطه — ده حد مؤقت لحماية الميزة الأساسية من الاستخدام الغير محدود.
-const FREE_GENERATIONS_LIMIT = 3;
+// حدود الاستخدام المجاني اليومية (بترجع لصفر كل يوم، مش مدى الحياة).
+// isPro بتتحدد فعليًا من عمود is_pro في Supabase (user_tokens)، لحد ما يترط Stripe
+// ويحدّث العمود ده تلقائيًا بعد الاشتراك.
+const FREE_GENERATIONS_LIMIT = 8; // كل الـ8 لغات مجانًا يوميًا
+const FREE_DOCS_LIMIT = 3;
+const FREE_BATCH_LIMIT = 3;
+const FREE_DIFF_LIMIT = 3;
 
 interface ScoreBreakdown {
   category: string;
@@ -104,21 +107,72 @@ export default function App() {
   const [batchFiles, setBatchFiles] = useState<File[]>([]);
   const [batchResults, setBatchResults] = useState<any[]>([]);
   const [generatingBatch, setGeneratingBatch] = useState(false);
-  // ملحوظة: setIsPro لسه مش بينادى في أي مكان — نظام الدفع (Stripe) لسه مش متصل.
-  // لما يتربط، يفترض نقرأ حالة الاشتراك من الباك إند/Supabase هنا ونستخدم setIsPro.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // isPro وعدادات الاستخدام بيتم جلبهم وتحديثهم من Supabase (جدول user_tokens)
+  // مش state محلي بيتصفر مع أي refresh — شوف fetchUsage و incrementUsage تحت.
   const [isPro, setIsPro] = useState<boolean>(false);
-const [showPricingModal, setShowPricingModal] = useState<boolean>(false);
-const [freeGenerations, setFreeGenerations] = useState<number>(0);
-const [freeDocs, setFreeDocs] = useState<number>(0);
-const [freeDiff, setFreeDiff] = useState<number>(0);
-const [freeBatch, setFreeBatch] = useState<number>(0);
+  const [showPricingModal, setShowPricingModal] = useState<boolean>(false);
+  const [freeGenerations, setFreeGenerations] = useState<number>(0);
+  const [freeDocs, setFreeDocs] = useState<number>(0);
+  const [freeDiff, setFreeDiff] = useState<number>(0);
+  const [freeBatch, setFreeBatch] = useState<number>(0);
+  const [usageLoaded, setUsageLoaded] = useState<boolean>(false);
   const [oldFile, setOldFile] = useState<File | null>(null);
   const [newFile, setNewFile] = useState<File | null>(null);
   const [changeReport, setChangeReport] = useState<any>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [detectingChanges, setDetectingChanges] = useState(false);
+
+  // يجيب صف الاستخدام بتاع المستخدم من Supabase، ويعمل reset تلقائي لو usage_date
+  // مختلف عن اليوم الحالي (يعني حد يومي فعلي، مش مدى الحياة).
+  const fetchUsage = async (userId: string) => {
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const { data } = await supabase
+      .from("user_tokens")
+      .select("is_pro, free_generations, free_docs, free_batch, free_diff, usage_date")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!data || data.usage_date !== today) {
+      // يوم جديد (أو أول مرة) → صفّر العدادات في Supabase وفي الواجهة
+      await supabase.from("user_tokens").upsert({
+        user_id: userId,
+        free_generations: 0,
+        free_docs: 0,
+        free_batch: 0,
+        free_diff: 0,
+        usage_date: today,
+        updated_at: new Date().toISOString(),
+      });
+      setIsPro(data?.is_pro ?? false);
+      setFreeGenerations(0);
+      setFreeDocs(0);
+      setFreeBatch(0);
+      setFreeDiff(0);
+    } else {
+      setIsPro(data.is_pro ?? false);
+      setFreeGenerations(data.free_generations ?? 0);
+      setFreeDocs(data.free_docs ?? 0);
+      setFreeBatch(data.free_batch ?? 0);
+      setFreeDiff(data.free_diff ?? 0);
+    }
+    setUsageLoaded(true);
+  };
+
+  // بتزود عداد معين بواحد محليًا وفي Supabase مع بعض (بدل ما نعتمد على state محلي بس).
+  const incrementUsage = async (
+    field: "free_generations" | "free_docs" | "free_batch" | "free_diff",
+    currentValue: number,
+    setter: (n: number) => void
+  ) => {
+    if (!user) return;
+    const newValue = currentValue + 1;
+    setter(newValue);
+    await supabase
+      .from("user_tokens")
+      .update({ [field]: newValue, updated_at: new Date().toISOString() })
+      .eq("user_id", user.id);
+  };
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
@@ -136,6 +190,7 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
           updated_at: new Date().toISOString(),
         });
       }
+      if (session?.user) await fetchUsage(session.user.id);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -147,6 +202,7 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
           updated_at: new Date().toISOString(),
         });
       }
+      if (session?.user) await fetchUsage(session.user.id);
     });
 
     return () => subscription.unsubscribe();
@@ -255,8 +311,9 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
   };
 
   const handleGenerate = async () => {
+    if (!user) { await handleLogin(); return; }
     if (!isPro && freeGenerations >= FREE_GENERATIONS_LIMIT) { setShowPricingModal(true); return; }
-    if (!isPro) setFreeGenerations(prev => prev + 1);
+    if (!isPro) await incrementUsage("free_generations", freeGenerations, setFreeGenerations);
     if (!file) {
       setError("Upload an OpenAPI file first.");
       return;
@@ -317,8 +374,9 @@ if (file) {
   };
 
   const handleGenerateDocs = async () => {
-     if (!isPro && freeDocs >= 1) { setShowPricingModal(true); return; }
-     if (!isPro) setFreeDocs(prev => prev + 1);
+     if (!user) { await handleLogin(); return; }
+     if (!isPro && freeDocs >= FREE_DOCS_LIMIT) { setShowPricingModal(true); return; }
+     if (!isPro) await incrementUsage("free_docs", freeDocs, setFreeDocs);
      if (!file) {
       setError("Upload an OpenAPI file first.");
       return;
@@ -347,9 +405,10 @@ if (file) {
   };
 
   const handleBatchGenerate = async () => {
-    if (!isPro && freeBatch >= 1) { setShowPricingModal(true); return; } 
+    if (!user) { await handleLogin(); return; }
+    if (!isPro && freeBatch >= FREE_BATCH_LIMIT) { setShowPricingModal(true); return; }
     if (!isPro && batchFiles.length > 3) { setError("Free plan: max 3 files."); return; }
-    if (!isPro) setFreeBatch(prev => prev + 1);
+    if (!isPro) await incrementUsage("free_batch", freeBatch, setFreeBatch);
     if (batchFiles.length === 0) {
       setError("Upload at least one OpenAPI file for batch generation.");
       return;
@@ -379,12 +438,13 @@ if (file) {
   };
 
   const handleDetectChanges = async () => {
+    if (!user) { await handleLogin(); return; }
     if (!oldFile || !newFile) {
-      if (!isPro && freeDiff >= 1) { setShowPricingModal(true); return; }
-      if (!isPro) setFreeDiff(prev => prev + 1);
       setError("Upload both the old and new OpenAPI files.");
       return;
     }
+    if (!isPro && freeDiff >= FREE_DIFF_LIMIT) { setShowPricingModal(true); return; }
+    if (!isPro) await incrementUsage("free_diff", freeDiff, setFreeDiff);
 
     setDetectingChanges(true);
     setChangeReport(null);
@@ -543,10 +603,10 @@ if (file) {
         </section>
 
         <section style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <button onClick={handleGenerate} disabled={generating} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "none", background: generating ? "#1a1a1a" : "#22c55e", color: generating ? "#666" : "#000", fontWeight: 800, fontSize: "16px", cursor: generating ? "not-allowed" : "pointer" }}>
+          <button onClick={handleGenerate} disabled={generating || (!!user && !usageLoaded)} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "none", background: generating ? "#1a1a1a" : "#22c55e", color: generating ? "#666" : "#000", fontWeight: 800, fontSize: "16px", cursor: generating ? "not-allowed" : "pointer" }}>
             {generating ? "Generating..." : "Generate SDK"}
           </button>
-          <button onClick={handleGenerateDocs} disabled={generatingDocs} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "1px solid #3b82f6", background: generatingDocs ? "#1a1a1a" : "#0f172a", color: generatingDocs ? "#666" : "#93c5fd", fontWeight: 800, fontSize: "16px", cursor: generatingDocs ? "not-allowed" : "pointer" }}>
+          <button onClick={handleGenerateDocs} disabled={generatingDocs || (!!user && !usageLoaded)} style={{ flex: "1 1 260px", padding: "16px", borderRadius: "12px", border: "1px solid #3b82f6", background: generatingDocs ? "#1a1a1a" : "#0f172a", color: generatingDocs ? "#666" : "#93c5fd", fontWeight: 800, fontSize: "16px", cursor: generatingDocs ? "not-allowed" : "pointer" }}>
             {generatingDocs ? "Generating docs..." : "Generate AI docs"}
           </button>
         </section>
@@ -697,7 +757,7 @@ if (file) {
             <input type="file" accept=".json,.yaml,.yml" multiple style={{ display: "none" }} onChange={(event) => setBatchFiles(Array.from(event.target.files || []))} />
             <span>{batchFiles.length > 0 ? `${batchFiles.length} files selected` : "Select multiple OpenAPI files"}</span>
           </label>
-          <button onClick={handleBatchGenerate} disabled={generatingBatch} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: generatingBatch ? "#1a1a1a" : "#7c3aed", color: generatingBatch ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: generatingBatch ? "not-allowed" : "pointer" }}>
+          <button onClick={handleBatchGenerate} disabled={generatingBatch || (!!user && !usageLoaded)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: generatingBatch ? "#1a1a1a" : "#7c3aed", color: generatingBatch ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: generatingBatch ? "not-allowed" : "pointer" }}>
             {generatingBatch ? "Processing..." : "Generate all SDKs"}
           </button>
 
@@ -740,7 +800,7 @@ if (file) {
               <div>{newFile ? newFile.name : "New API version"}</div>
             </label>
           </div>
-          <button onClick={handleDetectChanges} disabled={detectingChanges} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: detectingChanges ? "#1a1a1a" : "#0369a1", color: detectingChanges ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: detectingChanges ? "not-allowed" : "pointer" }}>
+          <button onClick={handleDetectChanges} disabled={detectingChanges || (!!user && !usageLoaded)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: detectingChanges ? "#1a1a1a" : "#0369a1", color: detectingChanges ? "#666" : "#fff", fontWeight: 800, fontSize: "15px", cursor: detectingChanges ? "not-allowed" : "pointer" }}>
             {detectingChanges ? "Detecting..." : "Detect changes"}
           </button>
 
