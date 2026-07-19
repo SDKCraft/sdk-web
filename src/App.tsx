@@ -211,6 +211,7 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      setAuthLoading(false);
       if (session?.provider_token && session?.user) {
         await supabase.from("user_tokens").upsert({
           user_id: session.user.id,
@@ -576,9 +577,6 @@ export default function App() {
           <h1 style={{ fontSize: "40px", fontWeight: 800, margin: "0 0 8px" }}>SDKCraft Developer Console</h1>
           <p style={{ color: "#888", margin: 0 }}>
             Transform OpenAPI specifications into production-ready SDKs, docs, and change reports.
-          </p>
-          <p style={{ color: "#f0f", margin: "8px 0 0", fontSize: "12px", fontFamily: "monospace" }}>
-            DEBUG: authLoading={String(authLoading)} | usageLoaded={String(usageLoaded)} | user={user ? user.id : "null"}
           </p>
         </section>
 
