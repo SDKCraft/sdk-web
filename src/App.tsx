@@ -212,18 +212,23 @@ export default function App() {
       setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-      if (session?.provider_token && session?.user) {
-        await supabase.from("user_tokens").upsert({
-          user_id: session.user.id,
-          github_token: session.provider_token,
-          updated_at: new Date().toISOString(),
-        });
-      }
-      console.log("onAuthStateChange: session?.user =", session?.user?.id);
-      if (session?.user) await fetchUsage(session.user.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // مهم: مينفعش نستدعي أي طلب لقاعدة البيانات مباشرة (sync) هنا —
+      // ده بيسبب deadlock معروف وموثّق في Supabase (auth lock بيتعارض مع طلب الـ DB).
+      // الحل الرسمي: نأجّل التنفيذ بـ setTimeout(..., 0) عشان يخرج بره الـ callback الحالي.
+      setTimeout(async () => {
+        setUser(session?.user ?? null);
+        setAuthLoading(false);
+        if (session?.provider_token && session?.user) {
+          await supabase.from("user_tokens").upsert({
+            user_id: session.user.id,
+            github_token: session.provider_token,
+            updated_at: new Date().toISOString(),
+          });
+        }
+        console.log("onAuthStateChange: session?.user =", session?.user?.id);
+        if (session?.user) await fetchUsage(session.user.id);
+      }, 0);
     });
 
     return () => subscription.unsubscribe();
