@@ -127,7 +127,6 @@ export default function App() {
   // يجيب صف الاستخدام بتاع المستخدم من Supabase، ويعمل reset تلقائي لو usage_date
   // مختلف عن اليوم الحالي (يعني حد يومي فعلي، مش مدى الحياة).
   const fetchUsage = async (userId: string) => {
-    console.log("fetchUsage: START", userId);
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     try {
       const { data, error } = await supabase
@@ -172,7 +171,6 @@ export default function App() {
       setFreeBatch(0);
       setFreeDiff(0);
     } finally {
-      console.log("fetchUsage: FINALLY, setting usageLoaded=true");
       setUsageLoaded(true);
     }
   };
@@ -203,7 +201,6 @@ export default function App() {
           updated_at: new Date().toISOString(),
         });
       }
-      console.log("getSession: session?.user =", session?.user?.id);
       if (session?.user) await fetchUsage(session.user.id);
     }).catch((err) => {
       // لو فشل جلب الجلسة نفسه (شبكة/توكن منتهي/إلخ)، منسيبش الموقع مقفول للأبد
@@ -226,7 +223,6 @@ export default function App() {
             updated_at: new Date().toISOString(),
           });
         }
-        console.log("onAuthStateChange: session?.user =", session?.user?.id);
         if (session?.user) await fetchUsage(session.user.id);
       }, 0);
     });
@@ -586,9 +582,6 @@ export default function App() {
           <h1 style={{ fontSize: "40px", fontWeight: 800, margin: "0 0 8px" }}>SDKCraft Developer Console</h1>
           <p style={{ color: "#888", margin: 0 }}>
             Transform OpenAPI specifications into production-ready SDKs, docs, and change reports.
-          </p>
-          <p style={{ color: "#f0f", margin: "8px 0 0", fontSize: "12px", fontFamily: "monospace" }}>
-            DEBUG: authLoading={String(authLoading)} | usageLoaded={String(usageLoaded)} | user={user ? user.id : "null"} | isPro={String(isPro)} | freeGen={freeGenerations}
           </p>
         </section>
 
