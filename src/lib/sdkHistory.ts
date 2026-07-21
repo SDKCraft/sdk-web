@@ -83,6 +83,14 @@ export async function checkAndRegisterProject(file: File): Promise<{
   // غير مسجل → مسموح (بدون تتبع)
   if (!user) return { allowed: true, isNew: false };
 
+  // مستخدم Pro → متخطاش حد الـ3 مشاريع خالص
+  const { data: tokenRow } = await supabase
+    .from('user_tokens')
+    .select('is_pro')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const isPro = tokenRow?.is_pro ?? false;
+
   const hash = await hashFile(file);
 
   // تحقق إذا الـ API موجود مسبقاً
@@ -95,19 +103,21 @@ export async function checkAndRegisterProject(file: File): Promise<{
 
   if (existing) return { allowed: true, isNew: false };
 
-  // عدد الـ APIs الحالية
-  const { count } = await supabase
-    .from('user_projects')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id);
+  if (!isPro) {
+    // عدد الـ APIs الحالية (فحص الحد المجاني بس، مش Pro)
+    const { count } = await supabase
+      .from('user_projects')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
 
-  const FREE_LIMIT = 3;
+    const FREE_LIMIT = 3;
 
-  if ((count ?? 0) >= FREE_LIMIT) {
-    return { 
-      allowed: false, 
-      isNew: true
-    };
+    if ((count ?? 0) >= FREE_LIMIT) {
+      return { 
+        allowed: false, 
+        isNew: true
+      };
+    }
   }
 
   // أضف الـ API الجديد
