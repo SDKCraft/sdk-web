@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { supabase } from "./supabase";
 
 const features = [
   {
@@ -29,7 +30,60 @@ type LandingProps = {
   onPricing: () => void;
 };
 
+/**
+ * فورم تواصل بسيط بيحفظ الرسالة مباشرة في جدول contact_messages بـ Supabase.
+ * بديل أضمن من mailto: لأنه بيشتغل حتى لو الزائر معندوش تطبيق بريد مربوط بالمتصفح.
+ */
+function ContactModal({ onClose }: { onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("sending");
+    const { error } = await supabase.from("contact_messages").insert({ name, email, message });
+    if (error) {
+      setStatus("error");
+    } else {
+      setStatus("sent");
+    }
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "#000000cc", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: "16px" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#0a0a0a", border: "1px solid #222", borderRadius: "10px", padding: "28px", width: "100%", maxWidth: "420px" }}>
+        {status === "sent" ? (
+          <>
+            <div style={{ fontWeight: 800, fontSize: "18px", marginBottom: "8px" }}>Message sent</div>
+            <div style={{ color: "#888", fontSize: "14px", marginBottom: "20px" }}>Thanks for reaching out — we'll get back to you soon.</div>
+            <button onClick={onClose} style={{ background: "#22c55e", color: "#000", border: "none", padding: "10px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>Close</button>
+          </>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div style={{ fontWeight: 800, fontSize: "18px", marginBottom: "18px" }}>Contact us</div>
+            <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" style={{ width: "100%", background: "#111", border: "1px solid #222", borderRadius: "8px", color: "#fff", padding: "10px 12px", fontSize: "14px", marginBottom: "10px", boxSizing: "border-box" }} />
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ width: "100%", background: "#111", border: "1px solid #222", borderRadius: "8px", color: "#fff", padding: "10px 12px", fontSize: "14px", marginBottom: "10px", boxSizing: "border-box" }} />
+            <textarea required value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Message" rows={4} style={{ width: "100%", background: "#111", border: "1px solid #222", borderRadius: "8px", color: "#fff", padding: "10px 12px", fontSize: "14px", marginBottom: "10px", boxSizing: "border-box", fontFamily: "inherit", resize: "vertical" }} />
+            {status === "error" && (
+              <div style={{ color: "#f87171", fontSize: "13px", marginBottom: "10px" }}>Something went wrong. Please try again.</div>
+            )}
+            <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+              <button type="submit" disabled={status === "sending"} style={{ background: "#22c55e", color: "#000", border: "none", padding: "10px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: 700, cursor: status === "sending" ? "default" : "pointer", opacity: status === "sending" ? 0.6 : 1 }}>
+                {status === "sending" ? "Sending..." : "Send"}
+              </button>
+              <button type="button" onClick={onClose} style={{ background: "none", color: "#aaa", border: "1px solid #333", padding: "10px 16px", borderRadius: "8px", fontSize: "14px", cursor: "pointer" }}>Cancel</button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Landing({ onStart, user, onLogin, onLogout, onPricing }: LandingProps) {
+  const [showContact, setShowContact] = useState(false);
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
       <nav style={{ borderBottom: "1px solid #111", padding: "0 32px", minHeight: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", position: "sticky", top: 0, background: "#000", zIndex: 100, flexWrap: "wrap" }}>
@@ -42,6 +96,7 @@ export default function Landing({ onStart, user, onLogin, onLogout, onPricing }:
           <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>GitHub</a>
           <button onClick={onPricing} style={{ background: "none", border: "none", color: "#888", fontSize: "14px", cursor: "pointer" }}>Pricing</button>
           <a href="https://github.com/SDKCraft/api-to-sdk/issues/new" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>Report a bug</a>
+          <button onClick={() => setShowContact(true)} style={{ background: "none", border: "none", color: "#888", fontSize: "14px", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Contact</button>
 
           {user ? (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
@@ -146,8 +201,12 @@ console.log(users.data);`}
 
       <footer style={{ borderTop: "1px solid #111", padding: "24px 32px", display: "flex", justifyContent: "space-between", gap: "16px", color: "#555", fontSize: "13px", flexWrap: "wrap" }}>
         <span>&lt;/&gt; SDKCraft - Open source SDK generator</span>
-        <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
+        <div style={{ display: "flex", gap: "20px" }}>
+          <button onClick={() => setShowContact(true)} style={{ background: "none", border: "none", color: "#555", fontSize: "13px", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Contact</button>
+          <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
+        </div>
       </footer>
+      {showContact && <ContactModal onClose={() => setShowContact(false)} />}
     </div>
   );
 }
