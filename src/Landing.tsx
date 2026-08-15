@@ -42,6 +42,7 @@ export default function Landing({ onStart, user, onLogin, onLogout, onPricing }:
           <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>GitHub</a>
           <button onClick={onPricing} style={{ background: "none", border: "none", color: "#888", fontSize: "14px", cursor: "pointer" }}>Pricing</button>
           <a href="https://github.com/SDKCraft/api-to-sdk/issues/new" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>Report a bug</a>
+          <a href="mailto:ihsan.elashhab@gmail.com?subject=SDKCraft Inquiry" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>Contact</a>
 
           {user ? (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
@@ -146,7 +147,10 @@ console.log(users.data);`}
 
       <footer style={{ borderTop: "1px solid #111", padding: "24px 32px", display: "flex", justifyContent: "space-between", gap: "16px", color: "#555", fontSize: "13px", flexWrap: "wrap" }}>
         <span>&lt;/&gt; SDKCraft - Open source SDK generator</span>
-        <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
+        <div style={{ display: "flex", gap: "20px" }}>
+          <a href="mailto:ihsan.elashhab@gmail.com?subject=SDKCraft Inquiry" style={{ color: "#555", textDecoration: "none" }}>Contact</a>
+          <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#555", textDecoration: "none" }}>GitHub</a>
+        </div>
       </footer>
     </div>
   );
