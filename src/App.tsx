@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import JSZip from "jszip";
 import Prism from "prismjs";
 import ReactMarkdown from "react-markdown";
@@ -12,6 +13,8 @@ import "prismjs/components/prism-swift";
 import "prismjs/themes/prism-tomorrow.css";
 import Landing from "./Landing";
 import Pricing from "./Pricing";
+import BlogList from "./BlogList";
+import BlogPost from "./BlogPost";
 import { supabase } from "./supabase";
 import { saveSDKHistory, getSDKHistory, deleteSDKHistory, checkAndRegisterProject } from "./lib/sdkHistory";
 
@@ -89,8 +92,12 @@ function sanitizeDownloadName(filename: string) {
 }
 
 export default function App() {
-  const [showLanding, setShowLanding] = useState(true);
-  const [showPricing, setShowPricing] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  // showLanding لسه موجود للتوافق مع باقي الكود تحت، لكن دلوقتي بيتحدّد
+  // من الـ URL الحقيقي (location.pathname) مش state داخلي بس — كده بقى
+  // كل صفحة ليها رابط مستقل يقدر Google يفهرسه والمستخدم يشاركه.
+  const [showLanding, setShowLanding] = useState(location.pathname === "/");
   const [user, setUser] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
   const [langs, setLangs] = useState<string[]>(["typescript"]);
@@ -179,8 +186,16 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
     await supabase.auth.signOut();
   };
 
-  if (showPricing) {
-    return <Pricing onStart={() => { setShowPricing(false); setShowLanding(false); }} />;
+  if (location.pathname === "/blog") {
+    return <BlogList />;
+  }
+
+  if (location.pathname.startsWith("/blog/")) {
+    return <BlogPost />;
+  }
+
+  if (location.pathname === "/pricing") {
+    return <Pricing onStart={() => { setShowLanding(false); navigate("/"); }} />;
   }
 
   if (showLanding) {
@@ -190,7 +205,7 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
         user={user}
         onLogin={handleLogin}
         onLogout={handleLogout}
-        onPricing={() => setShowPricing(true)}
+        onPricing={() => navigate("/pricing")}
       />
     );
   }
@@ -465,7 +480,7 @@ if (file) {
           <h2 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "8px" }}>Upgrade to Pro</h2>
           <p style={{ color: "#888", marginBottom: "24px" }}>You've reached the free tier limit.</p>
           <div style={{ display: "flex", gap: "12px" }}>
-            <button onClick={() => { setShowPricingModal(false); setShowPricing(true);window.scrollTo(0, 0); }} style={{ flex: 1, padding: "14px", borderRadius: "10px", background: "#22c55e", color: "#000", border: "none", fontWeight: 800, cursor: "pointer" }}>View Plans</button>
+            <button onClick={() => { setShowPricingModal(false); navigate("/pricing"); window.scrollTo(0, 0); }} style={{ flex: 1, padding: "14px", borderRadius: "10px", background: "#22c55e", color: "#000", border: "none", fontWeight: 800, cursor: "pointer" }}>View Plans</button>
             <button onClick={() => setShowPricingModal(false)} style={{ flex: 1, padding: "14px", borderRadius: "10px", background: "transparent", color: "#aaa", border: "1px solid #333", fontWeight: 700, cursor: "pointer" }}>Maybe later</button>
           </div>
         </div>

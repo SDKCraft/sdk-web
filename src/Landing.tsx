@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "./supabase";
 
 const features = [
@@ -95,6 +96,7 @@ export default function Landing({ onStart, user, onLogin, onLogout, onPricing }:
         <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
           <a href="https://github.com/SDKCraft/api-to-sdk" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>GitHub</a>
           <button onClick={onPricing} style={{ background: "none", border: "none", color: "#888", fontSize: "14px", cursor: "pointer" }}>Pricing</button>
+          <Link to="/blog" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>Blog</Link>
           <a href="https://github.com/SDKCraft/api-to-sdk/issues/new" target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: "14px", textDecoration: "none" }}>Report a bug</a>
           <button onClick={() => setShowContact(true)} style={{ background: "none", border: "none", color: "#888", fontSize: "14px", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Contact</button>
 
