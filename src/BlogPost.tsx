@@ -1,10 +1,13 @@
 import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { blogPosts } from "./blogPosts";
 
 export default function BlogPost() {
-  const { slug } = useParams();
+  const location = useLocation();
+  // مش بنستخدم useParams لأن الصفحة دي بتتعرض يدويًا (مش جوا <Route> رسمي)،
+  // فبنقرأ الـ slug مباشرة من آخر جزء في الرابط.
+  const slug = location.pathname.replace(/^\/blog\//, "").replace(/\/$/, "");
   const post = blogPosts.find((p) => p.slug === slug);
 
   // بيحدّث عنوان التاب ووصف الميتا وقت ما الزائر يفتح مقالة — مهم لـ SEO
