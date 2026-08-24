@@ -5,8 +5,10 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { inject, track } from '@vercel/analytics';
+import { initAnalytics } from './lib/analytics';
 
 inject();
+initAnalytics();
 
 // بيسجّل مصدر الزيارة (لو الرابط فيه utm_source) كـ custom event في Vercel Analytics،
 // عشان نقدر نعرف بالظبط أي قناة (X, LinkedIn, Reddit, Facebook...) فعلاً بتجيب زوار،

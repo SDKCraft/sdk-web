@@ -13,6 +13,7 @@ import "prismjs/components/prism-swift";
 import "prismjs/themes/prism-tomorrow.css";
 import { supabase } from "./supabase";
 import { saveSDKHistory, getSDKHistory, deleteSDKHistory, checkAndRegisterProject } from "./lib/sdkHistory";
+import { trackEvent, identifyUser } from "./lib/analytics";
 
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "https://api-to-sdk.onrender.com";
@@ -134,6 +135,17 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        identifyUser(session.user.id, session.user.email ?? undefined);
+        // بنفرّق بين "أول مرة يسجّل فيها فعليًا" و"رجع يسجّل دخول تاني" بمقارنة
+        // created_at مع last_sign_in_at — لو قريبين من بعض جدًا (أقل من دقيقة)
+        // يبقى ده أول ظهور حقيقي للمستخدم، مش مجرد إعادة دخول.
+        const createdAt = new Date(session.user.created_at).getTime();
+        const lastSignIn = new Date(session.user.last_sign_in_at ?? session.user.created_at).getTime();
+        if (Math.abs(lastSignIn - createdAt) < 60_000) {
+          trackEvent("sign_up");
+        }
+      }
       if (session?.provider_token && session?.user) {
         await supabase.from("user_tokens").upsert({
           user_id: session.user.id,
@@ -173,6 +185,7 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
     link.download = `${title.replace(/\s+/g, "-").toLowerCase()}-sdk.zip`;
     link.click();
     URL.revokeObjectURL(url);
+    trackEvent("download_zip", { title });
   };
 
   const downloadFile = (filename: string, content: string) => {
@@ -216,6 +229,7 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
     setResult(null);
     setDocsResult(null);
     setPreviewFile(null);
+    trackEvent("api_spec_uploaded", { fileName: selectedFile.name });
   };
 
   const handleGenerate = async () => {
@@ -256,6 +270,7 @@ if (file) {
 
       const data = await readJsonResponse(res);
       setResult(data);
+      trackEvent("sdk_generated", { languages: langs, endpoints: data.endpoints });
 
       await saveSDKHistory({
         title: data.title,
@@ -416,6 +431,7 @@ if (file) {
         });
       }
       setExportedRepoUrl(repo.html_url);
+      trackEvent("github_export", { repoName });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "GitHub export failed.");
     }
