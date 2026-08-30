@@ -124,13 +124,6 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
       const token = session?.provider_token || pendingToken;
-      if (token && session?.user) {
-        await supabase.from("user_tokens").upsert({
-          user_id: session.user.id,
-          github_token: token,
-          updated_at: new Date().toISOString(),
-        });
-      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -145,13 +138,6 @@ const [freeBatch, setFreeBatch] = useState<number>(0);
         if (Math.abs(lastSignIn - createdAt) < 60_000) {
           trackEvent("sign_up");
         }
-      }
-      if (session?.provider_token && session?.user) {
-        await supabase.from("user_tokens").upsert({
-          user_id: session.user.id,
-          github_token: session.provider_token,
-          updated_at: new Date().toISOString(),
-        });
       }
     });
 
@@ -394,7 +380,9 @@ if (file) {
     const clientId = "Ov23likCdgCy06sl4WWk";
     const scope = "repo workflow";
     const redirectUri = `${window.location.origin}/github-callback.html`;
-    const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const state = crypto.randomUUID();
+    sessionStorage.setItem("github_oauth_state", state);
+    const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
     const popup = window.open(authUrl, "github-oauth", "width=600,height=700");
     const token = await new Promise<string | null>((resolve) => {
       const timer = setInterval(() => {
@@ -403,9 +391,16 @@ if (file) {
         } catch {}
       }, 500);
       const handler = (e: MessageEvent) => {
+        if (e.origin !== window.location.origin) return;
         if (e.data?.type === "github-token") {
           clearInterval(timer);
           window.removeEventListener("message", handler);
+          const expectedState = sessionStorage.getItem("github_oauth_state");
+          sessionStorage.removeItem("github_oauth_state");
+          if (e.data.state !== expectedState) {
+            resolve(null);
+            return;
+          }
           resolve(e.data.token);
         }
       };
@@ -431,6 +426,7 @@ if (file) {
         });
       }
       setExportedRepoUrl(repo.html_url);
+      window.open(repo.html_url, "_blank");
       trackEvent("github_export", { repoName });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "GitHub export failed.");
