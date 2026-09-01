@@ -1,12 +1,20 @@
 import { useState } from "react";
+import { supabase } from "./supabase";
 
 export default function Pricing({ onStart }: { onStart: () => void }) {
   const [email, setEmail] = useState("");
   const [joined, setJoined] = useState(false);
+  const [waitlistError, setWaitlistError] = useState(false);
   const [annual, setAnnual] = useState(false);
 
-  const handleWaitlist = () => {
+  const handleWaitlist = async () => {
     if (!email) return alert("Please enter your email!");
+    setWaitlistError(false);
+    const { error } = await supabase.from("waitlist_emails").insert({ email, plan: "pro" });
+    if (error) {
+      setWaitlistError(true);
+      return;
+    }
     setJoined(true);
   };
 
@@ -178,13 +186,20 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
           {joined ? (
             <div style={{ color: "#22c55e", fontWeight: 700, fontSize: "18px" }}>✅ You're on the list! We'll notify you soon.</div>
           ) : (
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)}
-                style={{ flex: 1, padding: "12px 16px", borderRadius: "8px", border: "1px solid #333", background: "#111", color: "#fff", fontSize: "14px" }} />
-              <button onClick={handleWaitlist} style={{ padding: "12px 20px", borderRadius: "8px", background: "#22c55e", color: "#000", border: "none", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" as const }}>
-                Join Waitlist
-              </button>
-            </div>
+            <>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)}
+                  style={{ flex: 1, padding: "12px 16px", borderRadius: "8px", border: "1px solid #333", background: "#111", color: "#fff", fontSize: "14px" }} />
+                <button onClick={handleWaitlist} style={{ padding: "12px 20px", borderRadius: "8px", background: "#22c55e", color: "#000", border: "none", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" as const }}>
+                  Join Waitlist
+                </button>
+              </div>
+              {waitlistError && (
+                <div style={{ color: "#ef4444", fontSize: "13px", marginTop: "10px" }}>
+                  Something went wrong — please try again, or email us directly.
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
