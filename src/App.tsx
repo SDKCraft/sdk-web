@@ -5,6 +5,10 @@ import Pricing from "./Pricing";
 import BlogList from "./BlogList";
 import BlogPost from "./BlogPost";
 import Console from "./Console";
+import PrivacyPolicy from "./PrivacyPolicy";
+import PrivacyPolicyAr from "./PrivacyPolicyAr";
+import TermsOfService from "./TermsOfService";
+import TermsOfServiceAr from "./TermsOfServiceAr";
 import { supabase } from "./supabase";
 
 function getRedirectUrl() {
@@ -61,6 +65,10 @@ export default function App() {
       <Route path="/blog" element={<BlogList />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/console" element={<Console />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/privacy/ar" element={<PrivacyPolicyAr />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/terms/ar" element={<TermsOfServiceAr />} />
     </Routes>
   );
 }
