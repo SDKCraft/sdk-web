@@ -35,7 +35,7 @@ export default function BlogPost() {
   }
 
   return (
-    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>
       <nav style={{ borderBottom: "1px solid #111", padding: "0 32px", minHeight: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#000", zIndex: 100 }}>
         <Link to="/" style={{ display: "flex", alignItems: "center", gap: "8px", color: "#fff", textDecoration: "none" }}>
           <span style={{ color: "#22c55e", fontSize: "18px", fontWeight: 700 }}>&lt;/&gt;</span>

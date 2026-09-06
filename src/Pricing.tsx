@@ -96,7 +96,7 @@ export default function Pricing({ onStart }: { onStart: () => void }) {
   ];
 
   return (
-    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>
       {/* Nav */}
       <nav style={{ borderBottom: "1px solid #111", padding: "0 40px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "#000", zIndex: 100 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }} onClick={onStart}>

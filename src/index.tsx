@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
+import './i18n'; // لازم يتحمّل قبل أي مكوّن يستخدم useTranslation
+import { LanguageProvider } from './i18n/LanguageProvider';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { inject, track } from '@vercel/analytics';
@@ -24,7 +26,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

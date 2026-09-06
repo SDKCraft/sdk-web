@@ -1,0 +1,59 @@
+{
+  "nav": {
+    "github": "GitHub",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "reportBug": "Report a bug",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "logout": "Logout"
+  },
+  "hero": {
+    "badge": "Open source. Free to try. No signup required.",
+    "title": "Turn OpenAPI specs into production-ready SDKs",
+    "subtitle": "SDKCraft helps API teams generate client libraries, starter docs, and change reports from a single API contract.",
+    "cta": "Generate an SDK",
+    "viewGithub": "View on GitHub",
+    "previewLabel": "SDK preview"
+  },
+  "features": {
+    "title": "Built for fast API launches",
+    "items": [
+      { "title": "SDK generation", "desc": "Upload an OpenAPI spec and generate SDK files for TypeScript, Python, Dart, Go, and Java." },
+      { "title": "Developer docs", "desc": "Create a starter README from the same API contract so developers can understand the SDK faster." },
+      { "title": "Change detection", "desc": "Compare old and new API versions to spot breaking changes before they surprise SDK users." }
+    ]
+  },
+  "steps": {
+    "title": "How it works",
+    "items": [
+      { "title": "Upload your spec", "desc": "Use an OpenAPI JSON or YAML file." },
+      { "title": "Pick languages", "desc": "Choose one or more SDK targets." },
+      { "title": "Download the SDK", "desc": "Preview files, download a ZIP, or export to GitHub." }
+    ]
+  },
+  "finalCta": {
+    "title": "Generate your first SDK before your next release",
+    "subtitle": "Upload a spec and try the full flow in the browser.",
+    "cta": "Start free"
+  },
+  "footer": {
+    "tagline": "</> SDKCraft - Open source SDK generator"
+  },
+  "contact": {
+    "title": "Contact us",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send",
+    "sending": "Sending...",
+    "cancel": "Cancel",
+    "close": "Close",
+    "sentTitle": "Message sent",
+    "sentDesc": "Thanks for reaching out — we'll get back to you soon.",
+    "error": "Something went wrong. Please try again."
+  },
+  "langSwitcher": {
+    "label": "العربية"
+  }
+}

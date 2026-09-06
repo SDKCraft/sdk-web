@@ -31,7 +31,7 @@ export default function LegalPage({ title, lastUpdated, content, lang, altLangHr
   const isRtl = lang === "ar";
 
   return (
-    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "var(--font-sans)" }}>
       <nav
         style={{
           borderBottom: "1px solid #111",
